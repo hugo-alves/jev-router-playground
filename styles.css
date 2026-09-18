@@ -234,6 +234,13 @@ input, textarea { font: inherit; color: inherit; }
   color: var(--muted-2);
   font-size: 12px;
 }
+.page-footer__source {
+  margin-left: 8px;
+  color: var(--blue);
+  font-weight: 700;
+  text-decoration: none;
+}
+.page-footer__source:hover { text-decoration: underline; }
 
 /* ───── Buttons ───── */
 .btn {
