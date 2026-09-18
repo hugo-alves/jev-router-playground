@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jev Router Playground</title>
+  <meta name="description" content="An interactive model-routing experiment. Configure a pool of OpenRouter models, give Jev a task, and see whether its routing decision matches the answer you judge best.">
+  <link rel="stylesheet" href="styles.css?v=7">
+  <link rel="preconnect" href="https://openrouter.ai">
+</head>
+<body>
+
+  <!-- ───────── Header ───────── -->
+  <header class="app-header">
+    <div class="app-header__main">
+      <div class="app-header__title-row">
+        <h1 class="app-header__title">Jev Router Playground</h1>
+        <p class="app-header__tagline">Configure the candidates. Let Jev decide. Check whether it was right.</p>
+      </div>
+      <p class="app-header__meta">Model-routing experiment by Hugo Alves · September 2026</p>
+    </div>
+    <div class="app-header__actions">
+      <div class="status-pill" id="status-pill" data-status="disconnected" title="Connection status">
+        <span class="status-pill__dot" aria-hidden="true"></span>
+        <span class="status-pill__label">Disconnected</span>
+      </div>
+      <button class="btn btn--ghost" id="open-settings" type="button" aria-haspopup="dialog">
+        <svg class="icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+            d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm7.4-3.5c0-.5-.05-1-.13-1.46l2.1-1.65-2-3.46-2.48 1a7.5 7.5 0 0 0-2.53-1.46L14 2.5h-4l-.36 2.47a7.5 7.5 0 0 0-2.53 1.46l-2.48-1-2 3.46 2.1 1.65A8 8 0 0 0 4.6 12c0 .5.05 1 .13 1.46L2.63 15.1l2 3.46 2.48-1a7.5 7.5 0 0 0 2.53 1.46L10 21.5h4l.36-2.47a7.5 7.5 0 0 0 2.53-1.46l2.48 1 2-3.46-2.1-1.65c.08-.46.13-.96.13-1.46Z"/>
+        </svg>
+        Settings
+      </button>
+      <p class="app-header__keys-note">Your keys stay in this tab</p>
+    </div>
+  </header>
+
+  <main class="app-main">
+
+    <!-- ───────── Section 1 · Model Pool ───────── -->
+    <section class="section" aria-labelledby="section-pool">
+      <header class="section__head">
+        <div class="section__head-left">
+          <h2 class="section__title"><span class="section__num">1.</span> Build your model pool</h2>
+          <p class="section__sub">Choose the models Jev can route between and tell it what each one is best at.</p>
+        </div>
+        <div class="section__head-right">
+          <button class="btn btn--secondary" id="open-browse" type="button">
+            <svg class="icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+              <path d="m20 20-4.2-4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+            </svg>
+            Browse OpenRouter models
+          </button>
+          <button class="btn btn--secondary" id="open-paste" type="button">
+            <svg class="icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <rect x="6" y="4" width="12" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M9 9h6M9 12h6M9 15h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            Paste model list
+          </button>
+          <button class="btn btn--primary" id="add-model" type="button">
+            <svg class="icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            Add model
+          </button>
+        </div>
+      </header>
+
+      <div class="card-grid" id="model-pool" aria-live="polite"></div>
+      <p class="empty-hint" id="pool-empty" hidden>Add at least two candidates before asking Jev to choose.</p>
+    </section>
+
+    <!-- ───────── Section 2 · Task ───────── -->
+    <section class="section" aria-labelledby="section-task">
+      <header class="section__head">
+        <div class="section__head-left">
+          <h2 class="section__title"><span class="section__num">2.</span> Give Jev a task</h2>
+          <p class="section__sub" id="task-sub">Jev reads the task and the model profiles, then picks the best fit.</p>
+        </div>
+      </header>
+
+      <div class="task-grid">
+        <div class="task-grid__input">
+          <div class="textarea-shell">
+            <textarea
+              id="task-prompt"
+              class="task-textarea"
+              rows="6"
+              maxlength="2000"
+              placeholder="Describe the task you want answered. Be specific — the better Jev understands the task, the better it routes."
+            ></textarea>
+            <div class="textarea-counter"><span id="task-count">0</span>/2000</div>
+          </div>
+        </div>
+        <div class="task-grid__actions">
+          <button class="btn btn--primary btn--lg" id="ask-jev" type="button" disabled>
+            Ask Jev to choose
+            <svg class="icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button class="btn btn--secondary btn--lg" id="run-every" type="button" disabled>
+            <svg class="icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path d="M8 5v14l11-7z" fill="currentColor"/>
+            </svg>
+            Run every model
+          </button>
+          <p class="task-helper" id="task-helper">Add candidates and paste a task to begin.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────── Section 3 · Decision ───────── -->
+    <section class="section" aria-labelledby="section-decision">
+      <header class="section__head">
+        <div class="section__head-left">
+          <h2 class="section__title"><span class="section__num">3.</span> Check the decision</h2>
+          <p class="section__sub">See Jev's choice, the probabilities for each model, and compare the answers.</p>
+        </div>
+        <div class="section__head-right">
+          <span class="run-note">This run stays in your browser.</span>
+          <button class="btn btn--ghost" id="export-result" type="button" disabled>
+            <svg class="icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path d="M12 4v11M7 10l5 5 5-5M5 19h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Export result
+          </button>
+        </div>
+      </header>
+
+      <div id="decision-empty" class="empty-hint empty-hint--centered">
+        Ask Jev to choose above. Its selection, the probability distribution and (if you run them) the per-model answers will appear here.
+      </div>
+
+      <div id="decision-region" hidden>
+        <div class="decision-row">
+          <article class="card card--accent card--jev-choice" id="jev-choice-card">
+            <header class="card__head">
+              <span class="card__head-icon" aria-hidden="true">›</span>
+              <span class="card__head-title">Jev chose</span>
+            </header>
+            <div class="jev-choice__model">
+              <h3 class="jev-choice__name" id="jev-choice-name">—</h3>
+              <span class="confidence-badge" id="jev-choice-confidence">Strong preference</span>
+            </div>
+            <p class="jev-choice__explanation" id="jev-choice-explanation">—</p>
+            <p class="jev-choice__meta" id="jev-choice-meta">—</p>
+          </article>
+
+          <article class="card card--probs">
+            <h3 class="card__h3">Route probabilities</h3>
+            <ul class="prob-list" id="prob-list"></ul>
+          </article>
+
+          <article class="card card--confidence" id="confidence-card">
+            <div class="confidence-card__icon" aria-hidden="true">⚡</div>
+            <h3 class="confidence-card__title" id="confidence-title">Strong preference</h3>
+            <p class="confidence-card__body" id="confidence-body">—</p>
+          </article>
+        </div>
+
+        <div class="answers-grid" id="answers-grid"></div>
+
+        <footer class="decision-footer" id="decision-footer" hidden>
+          <div class="decision-footer__verdict" id="verdict-banner">
+            <span class="verdict-icon" id="verdict-icon">✓</span>
+            <span class="verdict-text" id="verdict-text">—</span>
+          </div>
+          <div class="decision-footer__actions">
+            <span class="verdict-praise" id="verdict-praise" hidden>Nice! Jev's choice matched your pick.</span>
+            <button class="btn btn--secondary" id="run-another" type="button">Run another task</button>
+          </div>
+        </footer>
+      </div>
+    </section>
+
+    <p class="page-footer">Model-routing experiment · Results stay in this browser tab · Keys are never stored.</p>
+  </main>
+
+  <!-- ───────── Modals ───────── -->
+  <div class="modal-root" id="modal-root" hidden>
+    <!-- Settings modal -->
+    <div class="modal" id="modal-settings" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
+      <div class="modal__backdrop" data-close="settings"></div>
+      <div class="modal__panel">
+        <header class="modal__head">
+          <h2 id="settings-title">Settings</h2>
+          <button class="modal__close" type="button" data-close="settings" aria-label="Close">×</button>
+        </header>
+        <div class="modal__body">
+          <p class="modal__lede">Keys are sent directly to TypeSafe and OpenRouter from your browser. They are kept only in memory for the current tab and never stored.</p>
+
+          <div class="field">
+            <label for="set-jev-key">TypeSafe / Jev API key <span class="muted">· in memory</span></label>
+            <input id="set-jev-key" type="password" autocomplete="off" placeholder="apikey_…">
+            <p class="field__hint">Required to ask Jev to choose. Get one at <a href="https://typesafe.ai" target="_blank" rel="noopener">typesafe.ai</a>.</p>
+          </div>
+
+          <div class="field">
+            <label for="set-openrouter-key">OpenRouter API key <span class="muted">· in memory</span></label>
+            <input id="set-openrouter-key" type="password" autocomplete="off" placeholder="sk-or-…">
+            <p class="field__hint">Required to browse the catalogue and run models. Get one at <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">openrouter.ai/keys</a>.</p>
+          </div>
+
+          <details class="advanced">
+            <summary>Advanced · endpoints</summary>
+            <div class="field">
+              <label for="set-jev-url">Jev / TypeSafe endpoint</label>
+              <input id="set-jev-url" type="text" autocomplete="off" placeholder="https://jev-router-proxy.xperiment.workers.dev/jev">
+              <p class="field__hint">Default goes through a CORS proxy because TypeSafe doesn't return CORS headers on errors. To call TypeSafe directly, use <button type="button" class="link-btn" id="use-direct">https://api.typesafe.ai/v1/systemone</button> (will fail with <em>Failed to fetch</em> on browser tabs).</p>
+            </div>
+            <div class="field">
+              <label for="set-openrouter-url">OpenRouter base URL</label>
+              <input id="set-openrouter-url" type="text" autocomplete="off" placeholder="https://openrouter.ai/api/v1">
+            </div>
+          </details>
+
+          <div class="settings-actions">
+            <button class="btn btn--secondary" id="test-connection" type="button">Test connection</button>
+            <span class="settings-actions__result" id="test-result"></span>
+          </div>
+        </div>
+        <footer class="modal__foot">
+          <button class="btn btn--ghost" type="button" data-close="settings">Cancel</button>
+          <button class="btn btn--primary" id="save-settings" type="button">Save</button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Browse OpenRouter modal -->
+    <div class="modal modal--wide" id="modal-browse" role="dialog" aria-modal="true" aria-labelledby="browse-title" hidden>
+      <div class="modal__backdrop" data-close="browse"></div>
+      <div class="modal__panel">
+        <header class="modal__head">
+          <h2 id="browse-title">Browse OpenRouter models</h2>
+          <button class="modal__close" type="button" data-close="browse" aria-label="Close">×</button>
+        </header>
+        <div class="modal__body">
+          <div class="browse-controls">
+            <input id="browse-search" type="search" placeholder="Search by name, id, or provider…" autocomplete="off">
+            <span class="browse-status" id="browse-status"></span>
+          </div>
+          <div class="browse-list" id="browse-list">
+            <div class="browse-empty">Loading the OpenRouter catalogue…</div>
+          </div>
+        </div>
+        <footer class="modal__foot">
+          <button class="btn btn--ghost" type="button" data-close="browse">Cancel</button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Paste list modal -->
+    <div class="modal" id="modal-paste" role="dialog" aria-modal="true" aria-labelledby="paste-title" hidden>
+      <div class="modal__backdrop" data-close="paste"></div>
+      <div class="modal__panel">
+        <header class="modal__head">
+          <h2 id="paste-title">Paste a list of models</h2>
+          <button class="modal__close" type="button" data-close="paste" aria-label="Close">×</button>
+        </header>
+        <div class="modal__body">
+          <p class="modal__lede">One model per line. Use any of these formats:</p>
+          <pre class="paste-hint">openai/gpt-4o-mini
+anthropic/claude-sonnet-4.6 — careful reasoning and writing
+google/gemini-2.5-flash-lite | Fast everyday model, $0.07 in / $0.28 out, 1M context
+qwen/qwen3-coder-next [code,debug=0.18/0.72,ctx=1M]</pre>
+          <div class="field">
+            <label for="paste-list">Models</label>
+            <textarea id="paste-list" rows="8" placeholder="openai/gpt-4o-mini
+anthropic/claude-sonnet-4.6 — careful reasoning
+google/gemini-2.5-flash-lite | Fast everyday model, 1M context"></textarea>
+          </div>
+          <p class="paste-status" id="paste-status"></p>
+        </div>
+        <footer class="modal__foot">
+          <button class="btn btn--ghost" type="button" data-close="paste">Cancel</button>
+          <button class="btn btn--primary" id="paste-add" type="button">Add to pool</button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Add model modal -->
+    <div class="modal" id="modal-add" role="dialog" aria-modal="true" aria-labelledby="add-title" hidden>
+      <div class="modal__backdrop" data-close="add"></div>
+      <div class="modal__panel">
+        <header class="modal__head">
+          <h2 id="add-title">Add a model</h2>
+          <button class="modal__close" type="button" data-close="add" aria-label="Close">×</button>
+        </header>
+        <div class="modal__body">
+          <div class="field">
+            <label for="add-id">OpenRouter ID</label>
+            <input id="add-id" type="text" autocomplete="off" placeholder="provider/model-name">
+            <p class="field__hint">If the model exists in the catalogue, its metadata is filled in automatically.</p>
+          </div>
+          <div class="field">
+            <label for="add-name">Display name</label>
+            <input id="add-name" type="text" autocomplete="off" placeholder="Friendly name">
+          </div>
+          <div class="field">
+            <label for="add-desc">What is this model good at?</label>
+            <textarea id="add-desc" rows="3" placeholder="A routing description helps Jev tell the candidates apart."></textarea>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="add-price-in">Input price (USD / 1M)</label>
+              <input id="add-price-in" type="number" min="0" step="0.001" placeholder="0.07">
+            </div>
+            <div class="field">
+              <label for="add-price-out">Output price (USD / 1M)</label>
+              <input id="add-price-out" type="number" min="0" step="0.001" placeholder="0.28">
+            </div>
+            <div class="field">
+              <label for="add-context">Context window</label>
+              <input id="add-context" type="number" min="1" step="1" placeholder="1000000">
+            </div>
+          </div>
+          <p class="add-status" id="add-status"></p>
+        </div>
+        <footer class="modal__foot">
+          <button class="btn btn--ghost" type="button" data-close="add">Cancel</button>
+          <button class="btn btn--primary" id="add-confirm" type="button">Add to pool</button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Confirm remove -->
+    <div class="modal modal--narrow" id="modal-confirm" role="dialog" aria-modal="true" aria-labelledby="confirm-title" hidden>
+      <div class="modal__backdrop" data-close="confirm"></div>
+      <div class="modal__panel">
+        <header class="modal__head">
+          <h2 id="confirm-title">Remove this model?</h2>
+        </header>
+        <div class="modal__body">
+          <p id="confirm-body">It will be deleted from the pool for this session.</p>
+        </div>
+        <footer class="modal__foot">
+          <button class="btn btn--ghost" type="button" data-close="confirm">Cancel</button>
+          <button class="btn btn--danger" id="confirm-ok" type="button">Remove</button>
+        </footer>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────── Toast ───────── -->
+  <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="false"></div>
+
+  <script src="app.js?v=7" defer></script>
+</body>
+</html>

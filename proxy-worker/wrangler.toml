@@ -1,0 +1,7 @@
+name = "jev-router-proxy"
+main = "index.js"
+compatibility_date = "2026-09-01"
+
+# Optional: override the upstream Jev endpoint.
+# [vars]
+# JEV_TARGET = "https://api.typesafe.ai/v1/systemone"

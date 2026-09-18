@@ -1,0 +1,34 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor / OS noise
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Build / dependency outputs (this repo has none today; ignore if added later)
+node_modules/
+dist/
+.wrangler/
+.dev.vars
+.dev.vars.*
+
+# Secrets — keep them out of git
+*.pem
+*.key
+.env
+.env.*
+secrets.*
+
+# Coverage / test outputs
+coverage/
+*.lcov
+
+# Logs
+*.log
+npm-debug.log*
