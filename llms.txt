@@ -1,0 +1,10 @@
+# Jev Router
+
+> Build a pool of AI models, give Jev a task and see whether its probabilistic route matches the answer you actually prefer.
+
+Configure the candidates. Let Jev decide. Check whether it was right.
+
+## Public content
+- [About this project](https://jevrouter.isanexperiment.com/about-this-project.html): Reviewed project summary.
+- [JSON content](https://jevrouter.isanexperiment.com/content.json): The same public summary as structured JSON.
+- [Homepage](https://jevrouter.isanexperiment.com/)

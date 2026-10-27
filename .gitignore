@@ -32,3 +32,8 @@ coverage/
 # Logs
 *.log
 npm-debug.log*
+
+!.env.example
+/posthog-config.js
+
+!.env.example

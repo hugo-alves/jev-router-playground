@@ -1,0 +1,13 @@
+{
+  "name": "Jev Router",
+  "url": "https://jevrouter.isanexperiment.com/",
+  "reviewedAt": "2026-10-27",
+  "pages": [
+    {
+      "url": "https://jevrouter.isanexperiment.com/about-this-project.html",
+      "name": "Jev Router",
+      "description": "Build a pool of AI models, give Jev a task and see whether its probabilistic route matches the answer you actually prefer.",
+      "note": "Configure the candidates. Let Jev decide. Check whether it was right."
+    }
+  ]
+}
